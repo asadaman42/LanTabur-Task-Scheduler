@@ -1,9 +1,20 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Button, Container, FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, Stack, Typography } from '@mui/material';
+import axios from 'axios';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import ReactImageUploading from 'react-images-uploading';
+
 
 const Register = () => {
+
+    const [images, setImages] = useState([]);
+    console.log(images[0]?.data_url);
+    const onChange = (imageList, addUpdateIndex) => {
+        // data for submit
+        
+        setImages(imageList);
+    };
 
     // displaying password
     const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +27,17 @@ const Register = () => {
     // React-hook-form
     const { register, handleSubmit, watch, formState: { errors } } = useForm({ mode: 'onTouched' });
     const password = watch('password');
-    const handleRegistration = (data, e) => { console.log(data); }
+
+    const imgbbKey = process.env.REACT_APP_imgbb;
+
+    const handleRegistration = (data, e) => {
+        console.log(data);
+
+        const url = `https://api.imgbb.com/1/upload?key=${imgbbKey}`;
+
+        axios.post(url, images[0]?.data_url)
+            .then(imgData => {console.log(imgData)})
+    };
 
     return (
         <Container maxWidth='sm'>
@@ -24,7 +45,7 @@ const Register = () => {
                 <Typography>
                     Create your account
                 </Typography>
-                <FormControl fullWidth>
+                {/* <FormControl fullWidth>
                     <InputLabel> Your Name </InputLabel>
                     <OutlinedInput label='Your Name' {...register("name")} autoFocus />
                 </FormControl>
@@ -52,9 +73,48 @@ const Register = () => {
                                 </IconButton>
                             </InputAdornment>
                         }
-                        type={showPasswordCfm? 'text' : 'password'} label='Confirm Password' placeholder='Retype Your Password' {...register("passwordCfm", { validate: (value) => value === password || "The Password doesn't match" })} />
+                        type={showPasswordCfm ? 'text' : 'password'} label='Confirm Password' placeholder='Retype Your Password' {...register("passwordCfm", { validate: (value) => value === password || "The Password doesn't match" })} />
                     {errors.passwordCfm && <Typography color='error'> {errors.passwordCfm.message} </Typography>}
                 </FormControl>
+                <OutlinedInput type='file'></OutlinedInput> */}
+
+                <ReactImageUploading value={images} onChange={onChange} dataURLKey="data_url">
+                    {
+                        ({
+                            imageList,
+                            onImageUpload,
+                            onImageRemoveAll,
+                            onImageUpdate,
+                            onImageRemove,
+                            isDragging,
+                            dragProps,
+                        }) =>
+                        (
+                            // write your building UI
+                            <div className="upload__image-wrapper">
+                                <button
+                                    style={isDragging ? { color: 'red' } : undefined}
+                                    onClick={onImageUpload}
+                                    {...dragProps}
+                                >
+                                    Click or Drop here
+                                </button>
+                                &nbsp;
+                                <button onClick={onImageRemoveAll}>Remove all images</button>
+                                {imageList.map((image, index) => (
+                                    <div key={index} className="image-item">
+                                        <img src={image['data_url']} alt="" width="100" />
+                                        <div className="image-item__btn-wrapper">
+                                            <button onClick={() => onImageUpdate(index)}>Update</button>
+                                            <button onClick={() => onImageRemove(index)}>Remove</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    }
+                </ReactImageUploading>
+
                 <Button type='submit' variant='contained' color='success' sx={{ width: { xs: '100%', sm: '66%' } }} > Register </Button>
             </Stack>
         </Container>
