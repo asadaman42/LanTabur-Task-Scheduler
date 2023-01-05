@@ -1,48 +1,48 @@
-import React, { useState } from 'react';
-import { AppBar, Container, Toolbar, Typography, Box, IconButton, Menu, Avatar, Button, Tooltip, MenuItem, } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { EventAvailable, MenuBook, MenuOpen, MenuOutlined } from '@mui/icons-material';
+import React, { useContext, useState } from 'react';
+import { AppBar, Container, Toolbar, Typography, Box, IconButton, Menu, Avatar, Button, Tooltip, MenuItem, Switch, } from '@mui/material';
+import { EventAvailable, MenuOpen, MenuOutlined } from '@mui/icons-material';
+import { Link, } from 'react-router-dom';
+import { UniversalContext } from '../../ContextSupplier/ContextSupplier';
 
 
-const pages = ['Add Task', 'My Task', 'Completed Tasks'];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const pages = [
+    {
+        heading: 'Add Task',
+        link: 'addtask'
+    },
+    {
+        heading: 'My Task',
+        link: 'mytask'
+    },
+    {
+        heading: 'Completed Tasks',
+        link: 'completedtask'
+    }
+];
+// const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 const Navbar = () => {
+    const { mode, setMode } = useContext(UniversalContext)
 
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
 
-
-
     const handleOpenNavMenu = (event) => { setAnchorElNav(event.currentTarget); };
-
     const handleOpenUserMenu = (event) => { setAnchorElUser(event.currentTarget); };
-
-
     const handleCloseNavMenu = () => { setAnchorElNav(null); };
-
     const handleCloseUserMenu = () => { setAnchorElUser(null); };
 
     return (
-        <AppBar position="static">
+        <AppBar position="static" sx={{ mb: 2 }}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <EventAvailable sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
                     <Typography
-                        variant="h6"
-                        noWrap
-                        component="a"
-                        href="/"
+                        variant="h6" noWrap component={Link} to="/"
                         sx={{
-                            mr: 2,
-                            display: { xs: 'none', md: 'flex' },
-                            fontFamily: 'monospace',
-                            fontWeight: 700,
-                            letterSpacing: '.3rem',
-                            color: 'inherit',
-                            textDecoration: 'none',
-                        }}
-                    >
+                            mr: 2, display: { xs: 'none', md: 'flex' },
+                            fontFamily: 'monospace', fontWeight: 700, letterSpacing: '.3rem', color: 'inherit', textDecoration: 'none',
+                        }}>
                         LanTabur Task Scheduler
                     </Typography>
 
@@ -76,8 +76,10 @@ const Navbar = () => {
                             }}
                         >
                             {pages.map((page) => (
-                                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                                    <Typography textAlign="center">{page}</Typography>
+                                <MenuItem key={page.heading} onClick={handleCloseNavMenu}>
+                                    <Link to={page.link} >
+                                        <Typography textAlign="center">{page.heading}</Typography>
+                                    </Link>
                                 </MenuItem>
                             ))}
                         </Menu>
@@ -103,15 +105,14 @@ const Navbar = () => {
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                         {pages.map((page) => (
-                            <Button
-                                key={page}
-                                onClick={handleCloseNavMenu}
-                                sx={{ my: 2, color: 'white', display: 'block' }}
+                            <Button key={page.heading} component={Link} to={page.link} sx={{ my: 2, color: 'white', display: 'block' }}
                             >
-                                {page}
+                                {page.heading}
                             </Button>
                         ))}
                     </Box>
+
+                    <Switch onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} />
 
                     <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
@@ -135,16 +136,14 @@ const Navbar = () => {
                             open={Boolean(anchorElUser)}
                             onClose={handleCloseUserMenu}
                         >
-                            {settings.map((setting) => (
-                                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                                    <Typography textAlign="center">{setting}</Typography>
-                                </MenuItem>
-                            ))}
+                            <MenuItem onClick={handleCloseUserMenu} component={Link} to='login'>
+                                <Typography textAlign="center" >Profile</Typography>
+                            </MenuItem>
                         </Menu>
                     </Box>
                 </Toolbar>
-            </Container>
-        </AppBar>
+            </Container >
+        </AppBar >
     );
 };
 
