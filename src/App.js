@@ -1,6 +1,7 @@
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import { grey, lightBlue } from "@mui/material/colors";
 import { useContext } from "react";
+import { Toaster } from "react-hot-toast";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./Components/Routes/Router";
 import { UniversalContext } from "./ContextSupplier/ContextSupplier";
@@ -36,6 +37,7 @@ function App() {
   return (
     <div>
       <ThemeProvider theme={theme}>
+        <Toaster />
         <CssBaseline />
         <RouterProvider router={router} ></RouterProvider>
       </ThemeProvider>

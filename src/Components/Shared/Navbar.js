@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { AppBar, Container, Toolbar, Typography, Box, IconButton, Menu, Avatar, Button, Tooltip, MenuItem, Switch, } from '@mui/material';
 import { EventAvailable, MenuOpen, MenuOutlined } from '@mui/icons-material';
-import { Link, } from 'react-router-dom';
+import { Link, useNavigate, } from 'react-router-dom';
 import { UniversalContext } from '../../ContextSupplier/ContextSupplier';
 
 
@@ -22,7 +22,8 @@ const pages = [
 // const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 const Navbar = () => {
-    const { mode, setMode } = useContext(UniversalContext)
+    const { mode, setMode, logOut, user } = useContext(UniversalContext);
+
 
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
@@ -31,6 +32,13 @@ const Navbar = () => {
     const handleOpenUserMenu = (event) => { setAnchorElUser(event.currentTarget); };
     const handleCloseNavMenu = () => { setAnchorElNav(null); };
     const handleCloseUserMenu = () => { setAnchorElUser(null); };
+
+    const navigate = useNavigate();
+    const signOut = () => {
+        // <Navigate to='/dashboard'></Navigate>
+        navigate("/");
+        logOut().then(() => { }).catch(error => console.error(error));
+    }
 
     return (
         <AppBar position="static" sx={{ mb: 2 }}>
@@ -117,7 +125,7 @@ const Navbar = () => {
                     <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                                <Avatar alt={user?.displayName} src={user?.photoURL} />
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -136,9 +144,27 @@ const Navbar = () => {
                             open={Boolean(anchorElUser)}
                             onClose={handleCloseUserMenu}
                         >
-                            <MenuItem onClick={handleCloseUserMenu} component={Link} to='login'>
-                                <Typography textAlign="center" >Profile</Typography>
-                            </MenuItem>
+                            {
+                                user?.uid ?
+                                    [
+                                        <MenuItem key={2} component={Link} to='/profile'>
+                                            <Typography textAlign="center" >{user?.displayName}</Typography>
+                                        </MenuItem>,
+                                        <MenuItem key={1} onClick={signOut}>
+                                            <Typography textAlign="center" >Log out</Typography>
+                                        </MenuItem>,
+                                    ]
+                                    :
+                                    [
+                                        <MenuItem key={1} component={Link} to='/login'>
+                                            <Typography textAlign="center" >Log In</Typography>
+                                        </MenuItem>,
+                                        <MenuItem key={2} component={Link} to='/register'>
+                                            <Typography textAlign="center" >Register</Typography>
+                                        </MenuItem>,
+
+                                    ]
+                            }
                         </Menu>
                     </Box>
                 </Toolbar>

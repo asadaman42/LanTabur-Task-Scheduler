@@ -1,20 +1,19 @@
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Button, Container, FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, Stack, Typography } from '@mui/material';
+import { Upload, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Button, Card, CardActions, CardMedia, Container, FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, Stack, Typography } from '@mui/material';
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 import ReactImageUploading from 'react-images-uploading';
+import { useNavigate } from 'react-router-dom';
+import { UniversalContext } from '../../ContextSupplier/ContextSupplier';
 
 
 const Register = () => {
+    const { createUserByEmailAndPassword, updatePhotoAndName } = useContext(UniversalContext);
 
-    const [images, setImages] = useState([]);
-    console.log(images[0]?.data_url);
-    const onChange = (imageList, addUpdateIndex) => {
-        // data for submit
-        
-        setImages(imageList);
-    };
+    const [images, setImages] = useState("");
+    const onChange = (imageList) => { setImages(imageList); };
 
     // displaying password
     const [showPassword, setShowPassword] = useState(false);
@@ -30,24 +29,51 @@ const Register = () => {
 
     const imgbbKey = process.env.REACT_APP_imgbb;
 
+    const navigate = useNavigate();
+    const postUserToDB = async (data) => {
+        const url = 'http://localhost:5000/user'
+        await axios.post(url, data)
+            .then(() => { })
+            .catch(err => console.log(err));
+    };
+
     const handleRegistration = (data, e) => {
-        console.log(data);
+        const image = images[0].file;
+        const name = `taskSchedulerUser${data.displayName}`;
+        const formData = new FormData();
+        formData.append('image', image);
+        const url = `https://api.imgbb.com/1/upload?key=${imgbbKey}&name=${name}`;
 
-        const url = `https://api.imgbb.com/1/upload?key=${imgbbKey}`;
-
-        axios.post(url, images[0]?.data_url)
-            .then(imgData => {console.log(imgData)})
+        axios.post(url, formData)
+            .then(imgData => {
+                if (imgData.data.success) {
+                    const photoURL = imgData.data.data.display_url;
+                    data.photoURL = photoURL;
+                    const { email, password, displayName } = data;
+                    // 1. post userInfo to mongodb
+                    postUserToDB(data);
+                    // 2. create user to firebase
+                    createUserByEmailAndPassword(email, password)
+                        .then(result => {
+                            toast.success('1-Successfully created account');
+                            updatePhotoAndName({ displayName, photoURL });
+                            e.target.reset();
+                            navigate('/');
+                        })
+                        .catch(er => console.error(er));
+                }
+            })
     };
 
     return (
         <Container maxWidth='sm'>
             <Stack spacing={2} component={'form'} onSubmit={handleSubmit(handleRegistration)} alignItems='center'>
-                <Typography>
+                <Typography variant='h5'>
                     Create your account
                 </Typography>
-                {/* <FormControl fullWidth>
+                <FormControl fullWidth>
                     <InputLabel> Your Name </InputLabel>
-                    <OutlinedInput label='Your Name' {...register("name")} autoFocus />
+                    <OutlinedInput label='Your Name' {...register("displayName")} autoFocus />
                 </FormControl>
                 <FormControl fullWidth>
                     <InputLabel> Your Email </InputLabel>
@@ -76,14 +102,12 @@ const Register = () => {
                         type={showPasswordCfm ? 'text' : 'password'} label='Confirm Password' placeholder='Retype Your Password' {...register("passwordCfm", { validate: (value) => value === password || "The Password doesn't match" })} />
                     {errors.passwordCfm && <Typography color='error'> {errors.passwordCfm.message} </Typography>}
                 </FormControl>
-                <OutlinedInput type='file'></OutlinedInput> */}
 
                 <ReactImageUploading value={images} onChange={onChange} dataURLKey="data_url">
                     {
                         ({
                             imageList,
                             onImageUpload,
-                            onImageRemoveAll,
                             onImageUpdate,
                             onImageRemove,
                             isDragging,
@@ -91,30 +115,22 @@ const Register = () => {
                         }) =>
                         (
                             // write your building UI
-                            <div className="upload__image-wrapper">
-                                <button
-                                    style={isDragging ? { color: 'red' } : undefined}
-                                    onClick={onImageUpload}
-                                    {...dragProps}
-                                >
-                                    Click or Drop here
-                                </button>
-                                &nbsp;
-                                <button onClick={onImageRemoveAll}>Remove all images</button>
+                            <Stack border={'1px solid'} spacing={1} width='100%' alignItems='center' py={1} style={isDragging ? { color: 'red' } : undefined} {...dragProps}>
+                                <Typography>Your Profile Picture</Typography>
+                                <Button variant='outlined' color='success' onClick={onImageUpload} endIcon={<Upload />}>Click or Drop here</Button>
                                 {imageList.map((image, index) => (
-                                    <div key={index} className="image-item">
-                                        <img src={image['data_url']} alt="" width="100" />
-                                        <div className="image-item__btn-wrapper">
-                                            <button onClick={() => onImageUpdate(index)}>Update</button>
-                                            <button onClick={() => onImageRemove(index)}>Remove</button>
-                                        </div>
-                                    </div>
+                                    <Card key={index} sx={{ maxWidth: 345 }}>
+                                        <CardMedia sx={{ height: 140 }} image={image['data_url']} title="Profile Picture" />
+                                        <CardActions>
+                                            <Button variant='outlined' color='success' onClick={() => onImageUpdate(index)}>Update</Button>
+                                            <Button variant='outlined' color='success' onClick={() => onImageRemove(index)}>Remove</Button>
+                                        </CardActions>
+                                    </Card>
                                 ))}
-                            </div>
+                            </Stack>
                         )
                     }
                 </ReactImageUploading>
-
                 <Button type='submit' variant='contained' color='success' sx={{ width: { xs: '100%', sm: '66%' } }} > Register </Button>
             </Stack>
         </Container>

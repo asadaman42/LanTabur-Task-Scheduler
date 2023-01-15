@@ -1,18 +1,25 @@
 import { Google, Login, Visibility, VisibilityOff } from '@mui/icons-material';
 import { Button, Chip, Container, Divider, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, Link, OutlinedInput, Stack, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link as LinkRouter } from "react-router-dom";
+import { UniversalContext } from '../../ContextSupplier/ContextSupplier';
 
 
 const LogIn = () => {
+    const { logInWithEmailAndPassword, signInWithGoogle } = useContext(UniversalContext);
     const { register, handleSubmit } = useForm();
 
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const handleMouseDownPassword = (event) => { event.preventDefault(); };
 
-    const onSubmit = (data, e) => { console.log(data); }
+    const onSubmit = (data, e) => {
+        const {email, password} = data; 
+        logInWithEmailAndPassword(email, password)
+        .then(response => console.log(response))
+         console.log(data);
+        }
     return (
         <Container maxWidth='lg'>
             <Stack
@@ -69,12 +76,12 @@ const LogIn = () => {
                 </Button>
 
                 <Typography>
-                    Don't have an account? <Link component={LinkRouter} to='/register'>sign up</Link> now 
+                    Don't have an account? <Link component={LinkRouter} to='/register'>sign up</Link> now
                 </Typography>
 
-                <Divider flexItem sx={{ "&::before, &::after": { borderColor: "primary.teal", }}} ><Chip variant='outlined' color='success' label="or" /></Divider>
+                <Divider flexItem sx={{ "&::before, &::after": { borderColor: "primary.teal", } }} ><Chip variant='outlined' color='success' label="or" /></Divider>
 
-                <Button startIcon={<Google/>} variant='outlined' color='success' sx={{ width: { xs: '100%', sm: '66%' } }}>Continue with Google</Button>
+                <Button startIcon={<Google />} variant='outlined' color='success' sx={{ width: { xs: '100%', sm: '66%' } }}>Continue with Google</Button>
 
             </Stack>
         </Container>
